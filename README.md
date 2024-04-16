@@ -30,6 +30,9 @@
 
 ```bash
 $ npm install
+
+# run init postgres with mock data in docker
+$ docker run --name sm-postgres-db -e POSTGRES_DB=test_pagination -e POSTGRES_PASSWORD=password -e POSTGRES_USER=user -p 5432:5432 -v $PWD/db/postgres_data:/var/lib/postgresql/data/ -v $PWD/db/dump:/docker-entrypoint-initdb.d -d postgres:alpine
 ```
 
 ## Running the app
