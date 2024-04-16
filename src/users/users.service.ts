@@ -1,4 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+	Injectable,
+	InternalServerErrorException,
+	Logger,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UsersEntity } from './users.entity';
 import { Repository } from 'typeorm';
@@ -22,7 +26,12 @@ export class UserService {
 			take: limit,
 		};
 
-		const [users, totalCount] = await this.usersRepo.findAndCount(options);
+		const [users, totalCount] = await this.usersRepo
+			.findAndCount(options)
+			.catch((err) => {
+				this.logger.error(err);
+				throw new InternalServerErrorException(err);
+			});
 
 		return {
 			users: users.map((user) => UsersResponseDto.fromUsersEntity(user)),
