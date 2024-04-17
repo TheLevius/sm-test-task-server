@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  sm_db:
+    container_name: sm-postgres-db
+    image: postgres:alpine
+    ports:
+      - ${DB_PORT}:${DB_PORT}
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - ./db/postgres_data:/var/lib/postgresql/data/
+      - ./db/dump:/docker-entrypoint-initdb.d
+    networks:
+      - docker_network
+    restart: unless-stopped
+
+volumes:
+  sm_postgres_volume:
+networks:
+  docker_network:
