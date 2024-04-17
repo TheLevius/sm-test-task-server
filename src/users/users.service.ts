@@ -2,6 +2,7 @@ import {
 	Injectable,
 	InternalServerErrorException,
 	Logger,
+	NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UsersEntity } from './users.entity';
@@ -12,10 +13,6 @@ import { UsersResponseDto } from './users.response.dto';
 @Injectable()
 export class UserService {
 	private readonly logger = new Logger(UserService.name);
-	private readonly queryDefaults = {
-		page: 1,
-		limit: 20,
-	};
 
 	constructor(
 		@InjectRepository(UsersEntity)
@@ -23,19 +20,8 @@ export class UserService {
 	) {}
 
 	// get list of all users
-	async findAll(
-		queryPage: string | undefined,
-		queryLimit: string | undefined
-	): Promise<UsersResult> {
-		const page = this.isQueryRight(queryPage)
-			? parseInt(queryPage, 10)
-			: this.queryDefaults.page;
-		let limit = this.isQueryRight(queryPage)
-			? parseInt(queryLimit, 10)
-			: this.queryDefaults.limit;
-		limit = [20, 40, 100, 1500].includes(limit)
-			? limit
-			: this.queryDefaults.limit; // constraints to prevent heavy request
+	async findAll(page: number, limit: number): Promise<UsersResult> {
+		limit = [20, 40, 100, 1500].includes(limit) ? limit : 20; // constraints to prevent heavy request
 		const options = {
 			skip: limit * (page - 1),
 			take: limit,
@@ -48,14 +34,18 @@ export class UserService {
 				throw new InternalServerErrorException(err);
 			});
 
+		const totalPages = Math.ceil(totalCount / limit);
+		if (page > totalPages) {
+			throw new NotFoundException(
+				`Request page: ${page} bigger than total pages: ${totalPages}`
+			);
+		}
+
 		return {
 			users: users.map((user) => UsersResponseDto.fromUsersEntity(user)),
 			page,
 			limit,
 			totalCount,
 		};
-	}
-	private isQueryRight(query: unknown): boolean {
-		return typeof query === 'string' && !isNaN(parseInt(query, 10));
 	}
 }
