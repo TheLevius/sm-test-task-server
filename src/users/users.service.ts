@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, Logger } from "@nestjs/common";
+import { Injectable, InternalServerErrorException, Logger, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { UsersEntity } from "./users.entity";
 import { Repository } from "typeorm";
@@ -26,7 +26,9 @@ export class UserService {
       this.logger.error(err);
       throw new InternalServerErrorException(err);
     });
-
+    if (page > Math.ceil(totalCount / limit)) {
+      throw new NotFoundException("request page bigger than totalPage");
+    }
     return {
       users: users.map((user) => UsersResponseDto.fromUsersEntity(user)),
       page,
