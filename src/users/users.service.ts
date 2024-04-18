@@ -26,9 +26,12 @@ export class UserService {
       this.logger.error(err);
       throw new InternalServerErrorException(err);
     });
-    if (page > Math.ceil(totalCount / limit)) {
-      throw new NotFoundException("request page bigger than totalPage");
+
+    const totalPages = Math.ceil(totalCount / limit);
+    if (page > totalPages) {
+      throw new NotFoundException(`Request page: ${page} bigger than total pages: ${totalPages}`);
     }
+
     return {
       users: users.map((user) => UsersResponseDto.fromUsersEntity(user)),
       page,
